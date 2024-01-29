@@ -5,7 +5,6 @@ import com.example.demo.service.VoitureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -19,43 +18,36 @@ public class VoitureController {
     private VoitureService voitureService;
 
     @PostMapping("voitures")
-    public ResponseEntity<?> save(@RequestBody Voiture voiture) {
-//        if(voiture.getMarque().isBlank()) {
-//            return ResponseEntity.badRequest().body("La marque ne peut pas être vide !");
-//        }
-//        else if(voiture.getModele().isBlank()) {
-//            return ResponseEntity.badRequest().body("Le modele ne peut pas être vide !");
-//        }
-//        else if(voiture.getAnnee() == null) {
-//            return ResponseEntity.badRequest().body("L'année ne peut pas être vide !");
-//        }
-//        else if(voiture.getCouleur().isBlank()) {
-//            return ResponseEntity.badRequest().body("La couleur ne peut pas être vide !");
-//        }
+    public ResponseEntity<?> save(@RequestBody VoiturePostDTO dto) {
+        Voiture voiture = VoitureMapper.convertDTOToEntity(dto);
+
         List<String> errorMsg = getErrorResponseMessage(voiture);
         if(!errorMsg.isEmpty()){
             return ResponseEntity.badRequest().body(errorMsg.toString());
         }
         else {
             voitureService.save(voiture);
-            return ResponseEntity.status(HttpStatus.CREATED).body(voiture);
+            VoitureGetDTO responseDTO = VoitureMapper.convertEntityToDTO(voiture);
+            return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
         }
     }
 
     @GetMapping("voitures/{id}")
-    public ResponseEntity<Voiture> getById(@PathVariable("id") Integer id) {
+    public ResponseEntity<?> getById(@PathVariable("id") Integer id) {
         Optional<Voiture> op = voitureService.findById(id);
 
         if(op.isPresent()) {
-            return ResponseEntity.ok(op.get());
+            VoitureGetDTO dto = VoitureMapper.convertEntityToDTO(op.get());
+            return ResponseEntity.ok(dto);
         } else {
             return ResponseEntity.notFound().build();
         }
     }
 
     @GetMapping("voitures")
-    public List<Voiture> getAll() {
-        return voitureService.findAll();
+    public List<VoitureGetDTO> getAll() {
+        List<Voiture> voitures = voitureService.findAll();
+        return  voitures.stream().map(v-> VoitureMapper.convertEntityToDTO(v)).toList();
     }
 
     @DeleteMapping("voitures/{id}")
@@ -64,7 +56,7 @@ public class VoitureController {
 
         if(op.isPresent()) {
             voitureService.delete(id);
-            return ResponseEntity.ok("Deleted !" + op.get());
+            return ResponseEntity.ok("Deleted !");
         } else {
             return ResponseEntity.notFound().build();
         }

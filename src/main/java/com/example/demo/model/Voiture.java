@@ -3,6 +3,7 @@ package com.example.demo.model;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "voitures")
@@ -93,6 +94,11 @@ public class Voiture {
 
     public void setMarque(String marque) {
         this.marque = marque;
+    }
+
+    public int calculateAge() {
+        int age = (int) ChronoUnit.YEARS.between(LocalDate.now(), this.getDateImmatriculation());
+        return age;
     }
 
     @Override
